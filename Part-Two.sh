@@ -26,9 +26,9 @@ kiss_install() {
 
     # Set default package list based on the system type
     if [ "$SYSTEM_TYPE" -eq 1 ]; then
-        PACKAGE_LIST="baseinit grub e2fsprogs dhcpcd ncurses libelf perl vim libudev-zero util-linux opendoas"
+        PACKAGE_LIST="baseinit grub e2fsprogs dhcpcd ncurses libelf perl vim sqlite libudev-zero util-linux opendoas"
     elif [ "$SYSTEM_TYPE" -eq 2 ]; then
-        PACKAGE_LIST="baseinit grub e2fsprogs dhcpcd ncurses libelf perl vim libudev-zero util-linux opendoas efibootmgr dosfstools"
+        PACKAGE_LIST="baseinit grub e2fsprogs dhcpcd ncurses libelf perl vim sqlite libudev-zero util-linux opendoas efibootmgr dosfstools"
     else
         dialog --msgbox "Invalid selection." 5 30
         return
