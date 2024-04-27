@@ -158,6 +158,12 @@ create_profile() {
         fi
     fi
 
+    # Prompt user for the number of parallel jobs
+    JOBS=$(dialog --stdout --title "Number of Jobs" --inputbox "Enter the number of parallel jobs for make (default: nproc):" 8 50 "$(nproc)")
+    if [ -z "$JOBS" ]; then
+        JOBS=$(nproc)  # Default to the number of processors
+    fi
+
     # Create the profile file
     local PROFILE_FILE="$DEST/profile"
     if ! touch "$PROFILE_FILE"; then
@@ -182,8 +188,8 @@ KISS_PATH="\$KISS_PATH:${DEST%/}/community/community"
 # Build Flags
 export CFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
 export CXXFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
-export MAKEFLAGS="-j1"
-export SAMUFLAGS="-j1"
+export MAKEFLAGS="-j$JOBS"
+export SAMUFLAGS="-j$JOBS"
 
 # Set date and time
 export TZ=CDT
@@ -192,6 +198,7 @@ EOF
     # Inform the user of successful profile creation using dialog
     dialog --title "Profile Created" --msgbox "Profile created successfully at $PROFILE_FILE" 6 50
 }
+
 
 
 
