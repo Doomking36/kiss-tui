@@ -9,8 +9,8 @@ create_partition() {
     cfdisk
 }
 
-# Function to format and mount partitions
-format_and_mount_partition() {
+# Function to format a partition
+format_partition() {
     # Prompt for partition input
     exec 3>&1
     PARTITION=$(dialog --inputbox "Enter the partition to format (e.g., /dev/sda1):" 10 50 2>&1 1>&3)
@@ -35,8 +35,14 @@ format_and_mount_partition() {
         return
     fi
     dialog --msgbox "$PARTITION formatted as ext4." 6 40
+}
 
+# Function to mount a partition
+mount_partition() {
+    # Use a global variable or pass as a parameter
+    local PARTITION=$1
     # Prompt for the mount point
+    exec 3>&1
     MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
     exec 3>&-
 
@@ -47,6 +53,7 @@ format_and_mount_partition() {
     fi
     dialog --msgbox "$PARTITION mounted to $MOUNT_POINT." 6 40
 }
+
 
 
 
