@@ -9,12 +9,36 @@ create_partition() {
     cfdisk
 }
 
+#!/bin/bash
+
+# Function to select and format a partition
+select_and_format_partition() {
+    # Fetch the list of partitions and format it for dialog
+    # The output of lsblk will be in the format "NAME  MAJ:MIN RM SIZE RO TYPE MOUNTPOINT"
+    partitions=$(lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | awk '/part/ {print $1 " " $2 " " $4 " " "off"}')
+
+    # Use dialog to display a checklist of partitions
+    dialog --radiolist "Select a partition to format:" 20 70 12 ${partitions} 2> /tmp/partition_selection.txt
+
+    # Get the selected partition from the output file
+    selected_partition=$(< /tmp/partition_selection.txt)
+
+    # Cleanup temporary file
+    rm -f /tmp/partition_selection.txt
+
+    # If no partition is selected, exit
+    if [ -z "$selected_partition" ]; then
+        echo "No partition selected."
+        return
+    fi
+
+    # Call format_partition with the selected partition
+    format_partition "/dev/$selected_partition"
+}
+
 # Function to format a partition
 format_partition() {
-    # Prompt for partition input
-    exec 3>&1
-    PARTITION=$(dialog --inputbox "Enter the partition to format (e.g., /dev/sda1):" 10 50 2>&1 1>&3)
-    exec 3>&-
+    local PARTITION=$1
 
     # Verify that the partition exists
     if [ ! -b "$PARTITION" ]; then
@@ -36,6 +60,10 @@ format_partition() {
     fi
     dialog --msgbox "$PARTITION formatted as ext4." 6 40
 }
+
+# Execute the partition selection and formatting process
+select_and_format_partition
+
 
 # Function to mount a partition
 mount_partition() {
