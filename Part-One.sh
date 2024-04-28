@@ -8,26 +8,14 @@ create_partition() {
 
 # Function to select and format a partition
 select_and_format_partition() {
-    # Fetch the list of partitions and format it for dialog
-    # The output of lsblk will be in the format "NAME  MAJ:MIN RM SIZE RO TYPE MOUNTPOINT"
     partitions=$(lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | awk '/part/ {print "/dev/" $1 " " $2 " " $4 " " "off"}')
-
-    # Use dialog to display a checklist of partitions
     dialog --radiolist "Select a partition to format:" 20 70 12 ${partitions} 2> /tmp/partition_selection.txt
-
-    # Get the selected partition from the output file
     selected_partition=$(< /tmp/partition_selection.txt)
-
-    # Cleanup temporary file
     rm -f /tmp/partition_selection.txt
-
-    # If no partition is selected, exit
     if [ -z "$selected_partition" ]; then
         echo "No partition selected."
         return
     fi
-
-    # Call format_partition with the selected partition
     format_partition "$selected_partition"
 }
 
