@@ -234,7 +234,7 @@ main_menu() {
         exec 3>&1;
         SELECTION=$(dialog --cancel-label "Exit" --clear --title "Main Menu" --menu "Choose an option:" 20 60 8 \
             1 "Check if UEFI or BIOS" \
-            2 "Partition" \
+            2 "Create Partition" \
             3 "Format and Mount Disk" \
             4 "Start Installation" \
             5 "Clone Repositories" \
@@ -243,7 +243,7 @@ main_menu() {
         exit_status=$?
         exec 3>&-;
 
-        if [ $exit_status -eq 1 ]; then  # This checks if user pressed 'Exit'
+        if [ $exit_status -eq 1 ]; then  # User pressed 'Exit'
             dialog --msgbox "Exiting script." 5 30
             keep_running=false
             continue
@@ -261,5 +261,5 @@ main_menu() {
     done
 }
 
-# Call main menu
+# Start the script by calling main menu
 main_menu
