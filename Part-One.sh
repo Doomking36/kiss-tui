@@ -5,39 +5,36 @@ keep_running=true
 
 # Function to create, format, and mount partitions
 partition_drive() {
-    # Launch disk partitioning tool
     cfdisk
+    exec 3>&1;
+    PARTITION=$(dialog --inputbox "Enter the partition to format (e.g., /dev/sda1):" 10 50 2>&1 1>&3);
+    exec 3>&-;
 
-    # Prompt for partition input
-    exec 3>&1
-    PARTITION=$(dialog --inputbox "Enter the partition to format (e.g., /dev/sda1):" 10 50 2>&1 1>&3)
-    exec 3>&-
-
-    # Verify that the partition exists
+    # Check if the partition exists
     if [ ! -b "$PARTITION" ]; then
         dialog --msgbox "The specified partition does not exist." 6 50
         return
     fi
 
-    # Confirm before formatting
+    # Confirmation for formatting
     dialog --yesno "Are you sure you want to format $PARTITION as ext4? This will erase all data on the partition." 7 60
     if [ $? -ne 0 ]; then
         dialog --msgbox "Formatting canceled." 6 40
         return
     fi
 
-    # Attempt to format the partition
-    if ! mkfs.ext4 -F $PARTITION; then
+    # Format the partition
+    if ! mkfs -t ext4 -F $PARTITION; then
         dialog --msgbox "Failed to format $PARTITION." 6 50
         return
     fi
     dialog --msgbox "$PARTITION formatted as ext4." 6 40
 
-    # Prompt for the mount point
+    # Ask for the mount point
     MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
     exec 3>&-
 
-    # Attempt to mount the partition
+    # Mount the partition
     if ! mount $PARTITION $MOUNT_POINT; then
         dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT." 6 50
         return
