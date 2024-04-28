@@ -6,7 +6,10 @@ keep_running=true
 # Function to create, format, and mount partitions
 partition_drive() {
     # List available partitions and select one
-    PARTITIONS=$(lsblk -lnpo NAME,TYPE | grep 'part$' | awk '{print $1 " " $1}')
+    # Using `lsblk -lnpo NAME,TYPE | grep 'part' | awk '{print $1 " " $1}'` to ensure all partitions are listed
+    PARTITIONS=$(lsblk -lnpo NAME,TYPE | grep 'part' | awk '{print $1 " " $1}')
+    echo "Available partitions: $PARTITIONS" # Debugging line to see the partitions listed
+    
     if [ -z "$PARTITIONS" ]; then
         dialog --msgbox "No partitions available." 5 40
         return
@@ -14,6 +17,8 @@ partition_drive() {
     exec 3>&1;
     PARTITION=$(dialog --menu "Choose a partition to format:" 15 60 6 $PARTITIONS 2>&1 1>&3)
     exec 3>&-;
+
+    echo "Selected partition: $PARTITION" # Debugging line to confirm the selected partition
 
     # Check if the partition exists
     if [ ! -b "$PARTITION" ]; then
@@ -46,7 +51,7 @@ partition_drive() {
     # Ask for the mount point
     exec 3>&1;
     MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
-    exec 3>&-
+    exec 3>&-;
 
     # Confirmation for mounting
     dialog --yesno "Do you want to mount $PARTITION to $MOUNT_POINT?" 6 60
