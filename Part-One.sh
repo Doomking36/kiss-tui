@@ -10,7 +10,7 @@ create_partition() {
 select_and_format_partition() {
     # Fetch the list of partitions and format it for dialog
     # The output of lsblk will be in the format "NAME  MAJ:MIN RM SIZE RO TYPE MOUNTPOINT"
-    partitions=$(lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | awk '/part/ {print $1 " " $2 " " $4 " " "off"}')
+    partitions=$(lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | awk '/part/ {print "/dev/" $1 " " $2 " " $4 " " "off"}')
 
     # Use dialog to display a checklist of partitions
     dialog --radiolist "Select a partition to format:" 20 70 12 ${partitions} 2> /tmp/partition_selection.txt
@@ -28,7 +28,7 @@ select_and_format_partition() {
     fi
 
     # Call format_partition with the selected partition
-    format_partition "/dev/$selected_partition"
+    format_partition "$selected_partition"
 }
 
 # Function to format a partition
@@ -59,10 +59,8 @@ format_partition() {
 # Execute the partition selection and formatting process
 select_and_format_partition
 
-
 # Function to mount a partition
 mount_partition() {
-    # Use a global variable or pass as a parameter
     local PARTITION=$1
     # Prompt for the mount point
     exec 3>&1
@@ -77,11 +75,6 @@ mount_partition() {
     dialog --msgbox "$PARTITION mounted to $MOUNT_POINT." 6 40
 }
 
-
-
-
-
-
 # Function to check if the system is UEFI or BIOS
 check_uefi_or_bios() {
     if [ -d "/sys/firmware/efi/" ]; then
@@ -90,7 +83,6 @@ check_uefi_or_bios() {
         dialog --msgbox "The system is BIOS." 6 25
     fi
 }
-
 
 # Function to start installation process
 start_installation() {
@@ -132,7 +124,6 @@ start_installation() {
 
     dialog --title "Installation Complete" --msgbox "KISS chroot environment has been successfully installed and set up on /mnt." 6 50
 }
-
 
 # Function to clone specific repositories with user-specified destination
 repo_input() {
@@ -176,8 +167,6 @@ repo_input() {
 
     dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/xorg" 10 50
 }
-
-
 
 # Create Profile containing path to repo for Kiss package manager
 create_profile() {
@@ -237,12 +226,6 @@ EOF
     # Inform the user of successful profile creation using dialog
     dialog --title "Profile Created" --msgbox "Profile created successfully at $PROFILE_FILE" 6 50
 }
-
-
-
-
-
-
 
 # Main Menu
 main_menu() {
