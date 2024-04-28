@@ -5,68 +5,46 @@ keep_running=true
 
 # Function to create, format, and mount partitions
 partition_drive() {
-    # List available partitions and select one
-    # Using `lsblk -lnpo NAME,TYPE | grep 'part' | awk '{print $1 " " $1}'` to ensure all partitions are listed
-    PARTITIONS=$(lsblk -lnpo NAME,TYPE | grep 'part' | awk '{print $1 " " $1}')
-    echo "Available partitions: $PARTITIONS" # Debugging line to see the partitions listed
-    
-    if [ -z "$PARTITIONS" ]; then
-        dialog --msgbox "No partitions available." 5 40
-        return
-    fi
-    exec 3>&1;
-    PARTITION=$(dialog --menu "Choose a partition to format:" 15 60 6 $PARTITIONS 2>&1 1>&3)
-    exec 3>&-;
+    # Launch disk partitioning tool
+    cfdisk
 
-    echo "Selected partition: $PARTITION" # Debugging line to confirm the selected partition
+    # Prompt for partition input
+    exec 3>&1
+    PARTITION=$(dialog --inputbox "Enter the partition to format (e.g., /dev/sda1):" 10 50 2>&1 1>&3)
+    exec 3>&-
 
-    # Check if the partition exists
+    # Verify that the partition exists
     if [ ! -b "$PARTITION" ]; then
         dialog --msgbox "The specified partition does not exist." 6 50
         return
     fi
 
-    # Choose file system type
-    exec 3>&1;
-    FSTYPE=$(dialog --menu "Select the file system type:" 10 50 3 \
-        "ext4" "Ext4" \
-        "ntfs" "NTFS" \
-        "btrfs" "Btrfs" 2>&1 1>&3)
-    exec 3>&-;
-
-    # Confirmation for formatting
-    dialog --yesno "Are you sure you want to format $PARTITION as $FSTYPE? This will erase all data on the partition." 7 60
+    # Confirm before formatting
+    dialog --yesno "Are you sure you want to format $PARTITION as ext4? This will erase all data on the partition." 7 60
     if [ $? -ne 0 ]; then
         dialog --msgbox "Formatting canceled." 6 40
         return
     fi
 
-    # Format the partition
-    if ! mkfs -t $FSTYPE -F $PARTITION; then
+    # Attempt to format the partition
+    if ! mkfs.ext4 -F $PARTITION; then
         dialog --msgbox "Failed to format $PARTITION." 6 50
         return
     fi
-    dialog --msgbox "$PARTITION formatted as $FSTYPE." 6 40
+    dialog --msgbox "$PARTITION formatted as ext4." 6 40
 
-    # Ask for the mount point
-    exec 3>&1;
+    # Prompt for the mount point
     MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
-    exec 3>&-;
+    exec 3>&-
 
-    # Confirmation for mounting
-    dialog --yesno "Do you want to mount $PARTITION to $MOUNT_POINT?" 6 60
-    if [ $? -ne 0 ]; then
-        dialog --msgbox "Mounting canceled." 6 40
-        return
-    fi
-
-    # Mount the partition
+    # Attempt to mount the partition
     if ! mount $PARTITION $MOUNT_POINT; then
         dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT." 6 50
         return
     fi
     dialog --msgbox "$PARTITION mounted to $MOUNT_POINT." 6 40
 }
+
 
 
 
