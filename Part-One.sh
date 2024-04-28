@@ -1,15 +1,10 @@
 #!/bin/bash
 
-# Loop control variable
-keep_running=true
-
 # Function to create a partition
 create_partition() {
     # Launch disk partitioning tool
     cfdisk
 }
-
-#!/bin/bash
 
 # Function to select and format a partition
 select_and_format_partition() {
@@ -251,35 +246,38 @@ EOF
 
 # Main Menu
 main_menu() {
-    exec 3>&1;
-    SELECTION=$(dialog --clear --title "Main Menu" --menu "Choose an option:" 20 60 10 \
-        1 "Check if UEFI or BIOS" \
-        2 "Partition, Format and Mount Disk" \
-        3 "Start Installation" \
-        4 "Clone Repositories" \
-        5 "Create Profile" \
-        0 "Exit" \
-        2>&1 1>&3)
-    exec 3>&-;
+    while true; do
+        exec 3>&1;
+        SELECTION=$(dialog --cancel-label "Exit" --clear --title "Main Menu" --menu "Choose an option:" 20 60 10 \
+            1 "Check if UEFI or BIOS" \
+            2 "Partition, Format and Mount Disk" \
+            3 "Start Installation" \
+            4 "Clone Repositories" \
+            5 "Create Profile" \
+            0 "Exit" \
+            2>&1 1>&3)
+        exit_status=$?
+        exec 3>&-;
 
-    # Handle user actions based on selection
-    case $SELECTION in
-        1) check_uefi_or_bios ;;
-        2) partition_drive ;;
-        3) start_installation ;;
-        4) repo_input ;;
-        5) create_profile ;;
-        0) dialog --msgbox "Exiting script." 5 30
-           keep_running=false
-           ;;
-        *) dialog --msgbox "Invalid option or cancelled. Please select a valid option." 6 30 ;;
-    esac
+        if [ $exit_status -eq 1 ]; then  # This checks if user pressed 'Exit'
+            if [[ -z $SELECTION ]]; then
+                dialog --msgbox "Exiting script." 5 30
+                break
+            fi
+        fi
+
+        case $SELECTION in
+            1) check_uefi_or_bios ;;
+            2) partition_drive ;;
+            3) start_installation ;;
+            4) repo_input ;;
+            5) create_profile ;;
+            0) dialog --msgbox "Exiting script." 5 30
+               break ;;
+            *) dialog --msgbox "Invalid option or cancelled. Please select a valid option." 6 30 ;;
+        esac
+    done
 }
 
-# Initialize running variable
-keep_running=true
-
-# Loop the menu until the user exits
-while $keep_running; do
-    main_menu
-done
+# Call main menu
+main_menu
