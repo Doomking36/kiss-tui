@@ -41,6 +41,7 @@ format_partition() {
         6 "XFS" \
         2>&1 >/dev/tty)
 
+    # Match the user's choice to the correct file system type
     case $FS_TYPE in
         1) FS_TYPE="ext4";;
         2) FS_TYPE="ntfs";;
@@ -60,7 +61,7 @@ format_partition() {
     fi
 
     # Attempt to format the partition
-    if ! mkfs -t $FS_TYPE -F $PARTITION; then
+    if ! mkfs -t "$FS_TYPE" -F "$PARTITION"; then
         dialog --msgbox "Failed to format '$PARTITION' as $FS_TYPE." 6 50
         return
     fi
