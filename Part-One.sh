@@ -13,11 +13,11 @@ select_and_format_partition() {
 
     # Display a radiolist dialog to allow the user to select a partition
     dialog --radiolist "Select a partition to format:" 20 70 12 ${partitions} 2> /tmp/partition_selection.txt
-    selected_partition=$(cat /tmp/partition_selection.txt)
+    selected_partition=$(cat /tmp/partition_selection.txt | tr -d '[:space:]')
     rm -f /tmp/partition_selection.txt
 
     # Debugging output
-    echo "Selected partition: $selected_partition"
+    echo "Selected partition: '$selected_partition'"
 
     # Check if the user selected a partition
     if [ -z "$selected_partition" ]; then
@@ -31,30 +31,30 @@ select_and_format_partition() {
 
 # Function to format a partition
 format_partition() {
-    local PARTITION=$1
+    local PARTITION="$1"
 
     # Debugging output
-    echo "Attempting to format: $PARTITION"
+    echo "Attempting to format: '$PARTITION'"
 
     # Verify that the partition exists
     if [ ! -b "$PARTITION" ]; then
-        dialog --msgbox "The specified partition does not exist: $PARTITION" 6 50
+        dialog --msgbox "The specified partition does not exist: '$PARTITION'" 6 50
         return
     fi
 
     # Confirm before formatting
-    dialog --yesno "Are you sure you want to format $PARTITION as ext4? This will erase all data on the partition." 7 60
+    dialog --yesno "Are you sure you want to format '$PARTITION' as ext4? This will erase all data on the partition." 7 60
     if [ $? -ne 0 ]; then
         dialog --msgbox "Formatting canceled." 6 40
         return
     fi
 
     # Attempt to format the partition
-    if ! mkfs.ext4 -F $PARTITION; then
-        dialog --msgbox "Failed to format $PARTITION." 6 50
+    if ! mkfs.ext4 -F "$PARTITION"; then
+        dialog --msgbox "Failed to format '$PARTITION'." 6 50
         return
     fi
-    dialog --msgbox "$PARTITION formatted as ext4." 6 40
+    dialog --msgbox "'$PARTITION' formatted as ext4." 6 40
 }
 
 # Function to mount a partition
