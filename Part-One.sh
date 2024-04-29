@@ -176,15 +176,16 @@ repo_input() {
         return
     fi
 
-    exec 3>&1
-    DESTINATION=$(dialog --inputbox "Enter the directory where you want to clone the repositories:" --fselect 10 60 2>&1 1>&3)
-    exec 3>&-
+    # Use dialog to create a directory selection menu
+    DESTINATION=$(dialog --stdout --title "Select Clone Directory" --dselect "$HOME/" 14 60)
 
-    if [[ -z "$DESTINATION" ]]; then
+    # Check if the user exited the dialog or didn't enter a destination
+    if [ -z "$DESTINATION" ]; then
         dialog --msgbox "No destination entered. Exiting the repository cloning process." 6 50
         return
     fi
 
+    # Ensure the destination directory exists
     if ! mkdir -p "$DESTINATION" 2>/dev/null; then
         dialog --msgbox "Failed to create or access the directory. Check permissions or path validity." 6 50
         return
@@ -196,7 +197,9 @@ repo_input() {
         local repo_path=$2
         local repo_name=$(basename "$repo_path")
 
+        # Inform the user about the cloning process
         dialog --infobox "Cloning $repo_name repository to $repo_path..." 5 70
+        # Perform the actual clone operation
         if ! git clone "$repo_url" "$repo_path" 2>/dev/null; then
             dialog --msgbox "Failed to clone $repo_name. Check your internet connection or repository URL." 6 60
             return 1
@@ -204,10 +207,14 @@ repo_input() {
     }
 
     # Perform cloning operations
-    clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
-    clone_repo https://github.com/kiss-community/community "$DESTINATION/community" &&
-    clone_repo https://github.com/ehawkvu/kiss-xorg "$DESTINATION/xorg"
+    if ! (clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
+        clone_repo https://github.com/kiss-community/community "$DESTINATION/community" &&
+        clone_repo https://github.com/ehawkvu/kiss-xorg "$DESTINATION/xorg"); then
+        dialog --msgbox "Some repositories failed to clone. Please check the error messages." 6 50
+        return
+    fi
 
+    # Inform the user of successful cloning
     dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/xorg" 10 50
 }
 
