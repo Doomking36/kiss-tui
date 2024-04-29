@@ -64,25 +64,22 @@ format_partition() {
 
 # Function to mount a partition
 mount_partition() {
-    # Fetch partition details: device name and size, omitting partitions that are already mounted
-    partitions=$(lsblk -nlp -o NAME,SIZE,MOUNTPOINT | awk '/part/ && $3 == "" {print $1 " " $2 " off"}')
-
-    # Check if no partitions are available
-    if [ -z "$partitions" ]; then
-        dialog --msgbox "No available partitions to mount." 6 40
-        return
-    fi
+    # Fetch all partition details: device name and size
+    partitions=$(lsblk -nlp -o NAME,SIZE,TYPE | awk '/part/ {print "\"" $1 "\" \"" $1 " (" $2 ")\" \"off\""}')
 
     # Display a radiolist dialog to allow the user to select a partition
     exec 3>&1
     PARTITION=$(dialog --radiolist "Select a partition to mount:" 20 70 4 ${partitions} 2>&1 1>&3)
     exec 3>&-
 
-    # If no partition was chosen, return
+    # Check if the user canceled the dialog
     if [ -z "$PARTITION" ]; then
         dialog --msgbox "No partition selected or canceled." 6 40
         return
     fi
+
+    # Remove quotes that may have been wrongly preserved
+    PARTITION=$(echo "$PARTITION" | sed 's/^"//' | sed 's/"$//')
 
     # Prompt for the mount point
     MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
