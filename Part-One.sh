@@ -13,7 +13,7 @@ select_and_format_partition() {
 
     # Display a radiolist dialog to allow the user to select a partition
     dialog --radiolist "Select a partition to format:" 20 70 12 ${partitions} 2> /tmp/partition_selection.txt
-    selected_partition=$(cat /tmp/partition_selection.txt | tr -d '[:space:]')
+    selected_partition=$(cat /tmp/partition_selection.txt)
     rm -f /tmp/partition_selection.txt
 
     # Check if the user selected a partition
@@ -21,6 +21,9 @@ select_and_format_partition() {
         echo "No partition selected."
         return
     fi
+
+    # Trim whitespace from the selected partition
+    selected_partition=$(echo $selected_partition | xargs)
 
     # Proceed to format the selected partition
     format_partition "$selected_partition"
@@ -41,7 +44,7 @@ format_partition() {
         6 "XFS" \
         2>&1 >/dev/tty)
 
-    # Match the user's choice to the correct file system type
+    # Translate the user's choice to the correct file system type
     case $FS_TYPE in
         1) FS_TYPE="ext4";;
         2) FS_TYPE="ntfs";;
@@ -61,7 +64,8 @@ format_partition() {
     fi
 
     # Attempt to format the partition
-    if ! mkfs -t "$FS_TYPE" -F "$PARTITION"; then
+    # Using the 'eval' command to interpret the arguments properly
+    if ! eval "mkfs -t $FS_TYPE -F $PARTITION"; then
         dialog --msgbox "Failed to format '$PARTITION' as $FS_TYPE." 6 50
         return
     fi
