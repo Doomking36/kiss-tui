@@ -64,20 +64,21 @@ format_partition() {
 
 # Function to mount a partition
 mount_partition() {
-    # Fetch partition details: device name, size, and remove entries that are not partitions
-    partitions=$(lsblk -nlp -o NAME,SIZE,TYPE,MOUNTPOINT | awk '/part/ && $4=="" {print $1 " " $2}')
+    # Fetch partition details: device name and size
+    readarray -t partitions < <(lsblk -nlp -o NAME,SIZE,TYPE | awk '/part/ {print $1, $2}')
 
     # Ensure that the partitions are available
-    if [ -z "$partitions" ]; then
+    if [ ${#partitions[@]} -eq 0 ]; then
         dialog --msgbox "No unmounted partitions found." 6 40
         exit 1
     fi
 
     # Use an array to store the partition options for the dialog command
     options=()
-    for partition in $partitions; do
-        size=$(lsblk -nlp -o SIZE $partition)
-        options+=("$partition" "$size")
+    for partition_info in "${partitions[@]}"; do
+        name=$(awk '{print $1}' <<< "$partition_info")
+        size=$(awk '{print $2}' <<< "$partition_info")
+        options+=("$name" "$size")
     done
 
     # Display a menu dialog to allow the user to select a partition
