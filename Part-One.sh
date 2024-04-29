@@ -16,9 +16,6 @@ select_and_format_partition() {
     selected_partition=$(cat /tmp/partition_selection.txt | tr -d '[:space:]')
     rm -f /tmp/partition_selection.txt
 
-    # Debugging output
-    echo "Selected partition: '$selected_partition'"
-
     # Check if the user selected a partition
     if [ -z "$selected_partition" ]; then
         echo "No partition selected."
@@ -29,32 +26,45 @@ select_and_format_partition() {
     format_partition "$selected_partition"
 }
 
-# Function to format a partition
+# Function to format a partition with chosen file system
 format_partition() {
     local PARTITION="$1"
+    local FS_TYPE
 
-    # Debugging output
-    echo "Attempting to format: '$PARTITION'"
+    # Offer a choice of file systems
+    FS_TYPE=$(dialog --menu "Choose the file system type for formatting:" 15 50 6 \
+        1 "ext4" \
+        2 "NTFS" \
+        3 "FAT32" \
+        4 "exFAT" \
+        5 "Btrfs" \
+        6 "XFS" \
+        2>&1 >/dev/tty)
 
-    # Verify that the partition exists
-    if [ ! -b "$PARTITION" ]; then
-        dialog --msgbox "The specified partition does not exist: '$PARTITION'" 6 50
-        return
-    fi
+    case $FS_TYPE in
+        1) FS_TYPE="ext4";;
+        2) FS_TYPE="ntfs";;
+        3) FS_TYPE="vfat";;
+        4) FS_TYPE="exfat";;
+        5) FS_TYPE="btrfs";;
+        6) FS_TYPE="xfs";;
+        *) dialog --msgbox "No file system selected or invalid choice." 6 40
+           return ;;
+    esac
 
     # Confirm before formatting
-    dialog --yesno "Are you sure you want to format '$PARTITION' as ext4? This will erase all data on the partition." 7 60
+    dialog --yesno "Are you sure you want to format '$PARTITION' as $FS_TYPE? This will erase all data on the partition." 7 60
     if [ $? -ne 0 ]; then
         dialog --msgbox "Formatting canceled." 6 40
         return
     fi
 
     # Attempt to format the partition
-    if ! mkfs.ext4 -F "$PARTITION"; then
-        dialog --msgbox "Failed to format '$PARTITION'." 6 50
+    if ! mkfs -t $FS_TYPE -F $PARTITION; then
+        dialog --msgbox "Failed to format '$PARTITION' as $FS_TYPE." 6 50
         return
     fi
-    dialog --msgbox "'$PARTITION' formatted as ext4." 6 40
+    dialog --msgbox "'$PARTITION' formatted as $FS_TYPE." 6 40
 }
 
 # Function to mount a partition
