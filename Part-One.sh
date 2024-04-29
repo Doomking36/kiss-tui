@@ -8,14 +8,24 @@ create_partition() {
 
 # Function to select and format a partition
 select_and_format_partition() {
-    partitions=$(lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | awk '/part/ {print "/dev/" $1 " " $2 " " $4 " " "off"}')
+    # Fetch partition details: device name, size, mount point, and format as dialog radiolist input
+    partitions=$(lsblk -nlp -o NAME,SIZE,MOUNTPOINT,TYPE | awk '/part/ {printf "\"%s\" \"%s %s\" %s\n", $1, $1, $2, "off"}')
+
+    # Display a radiolist dialog to allow the user to select a partition
     dialog --radiolist "Select a partition to format:" 20 70 12 ${partitions} 2> /tmp/partition_selection.txt
-    selected_partition=$(< /tmp/partition_selection.txt)
+    selected_partition=$(cat /tmp/partition_selection.txt)
     rm -f /tmp/partition_selection.txt
+
+    # Debugging output
+    echo "Selected partition: $selected_partition"
+
+    # Check if the user selected a partition
     if [ -z "$selected_partition" ]; then
         echo "No partition selected."
         return
     fi
+
+    # Proceed to format the selected partition
     format_partition "$selected_partition"
 }
 
@@ -23,9 +33,12 @@ select_and_format_partition() {
 format_partition() {
     local PARTITION=$1
 
+    # Debugging output
+    echo "Attempting to format: $PARTITION"
+
     # Verify that the partition exists
     if [ ! -b "$PARTITION" ]; then
-        dialog --msgbox "The specified partition does not exist." 6 50
+        dialog --msgbox "The specified partition does not exist: $PARTITION" 6 50
         return
     fi
 
@@ -43,9 +56,6 @@ format_partition() {
     fi
     dialog --msgbox "$PARTITION formatted as ext4." 6 40
 }
-
-# Execute the partition selection and formatting process
-select_and_format_partition
 
 # Function to mount a partition
 mount_partition() {
