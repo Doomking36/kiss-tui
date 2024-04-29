@@ -65,24 +65,33 @@ format_partition() {
 # Function to mount a partition
 mount_partition() {
     # Fetch partition details: device name, size, mount point (if any), and format as dialog radiolist input
-    partitions=$(lsblk -nlp -o NAME,SIZE,MOUNTPOINT,TYPE | awk '/part/ {printf "\"%s\" \"%s %s\" %s\n", $1, $1 " (" $2 ")", $3, "off"}')
+    partitions=$(lsblk -nlp -o NAME,SIZE,MOUNTPOINT,TYPE | awk '/part/ {print $1 " " $2 " " $3 " off"}')
 
     # Display a radiolist dialog to allow the user to select a partition
     exec 3>&1
     PARTITION=$(dialog --radiolist "Select a partition to mount:" 20 70 12 ${partitions} 2>&1 1>&3)
     exec 3>&-
-    
-    # If no partition was chosen, return
+
+    # Check if the user exited the dialog or didn't choose a partition
     if [ -z "$PARTITION" ]; then
-        dialog --msgbox "No partition selected." 6 40
+        dialog --msgbox "No partition selected or canceled." 6 40
         return
     fi
+
+    # Clean up the partition selection to avoid unwanted characters
+    PARTITION=$(echo "$PARTITION" | tr -d '[:space:]')
 
     # Prompt for the mount point
     MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
     exec 3>&-
 
-    # Check if the mount point directory exists, if not, create it
+    # Check if the user exited the dialog or didn't enter a mount point
+    if [ -z "$MOUNT_POINT" ]; then
+        dialog --msgbox "No mount point entered or canceled." 6 40
+        return
+    fi
+
+    # Ensure the mount point exists or create it
     if [ ! -d "$MOUNT_POINT" ]; then
         if ! mkdir -p "$MOUNT_POINT"; then
             dialog --msgbox "Failed to create mount point $MOUNT_POINT." 6 50
@@ -92,10 +101,11 @@ mount_partition() {
 
     # Attempt to mount the partition
     if ! mount "$PARTITION" "$MOUNT_POINT"; then
-        dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT." 6 50
+        dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT. Please check that the partition and mount point are correct." 6 50
         return
     fi
-    dialog --msgbox "$PARTITION mounted to $MOUNT_POINT." 6 40
+
+    dialog --msgbox "$PARTITION successfully mounted to $MOUNT_POINT." 6 40
 }
 
 # Function to check if the system is UEFI or BIOS
