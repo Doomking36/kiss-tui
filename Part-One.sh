@@ -64,12 +64,18 @@ format_partition() {
 
 # Function to mount a partition
 mount_partition() {
-    # Fetch partition details: device name, size, and use awk to filter partitions
-    partitions=$(lsblk -nlp -o NAME,SIZE | awk '/part/ {print "\"" $1 "\" \"" $1 " (" $2 ")\" off"}')
+    # Fetch partition details: device name and size, omitting partitions that are already mounted
+    partitions=$(lsblk -nlp -o NAME,SIZE,MOUNTPOINT | awk '/part/ && $3 == "" {print $1 " " $2 " off"}')
+
+    # Check if no partitions are available
+    if [ -z "$partitions" ]; then
+        dialog --msgbox "No available partitions to mount." 6 40
+        return
+    fi
 
     # Display a radiolist dialog to allow the user to select a partition
     exec 3>&1
-    PARTITION=$(dialog --radiolist "Select a partition to mount:" 20 70 12 ${partitions} 2>&1 1>&3)
+    PARTITION=$(dialog --radiolist "Select a partition to mount:" 20 70 4 ${partitions} 2>&1 1>&3)
     exec 3>&-
 
     # If no partition was chosen, return
@@ -90,14 +96,16 @@ mount_partition() {
 
     # Ensure the mount point exists or create it
     if [ ! -d "$MOUNT_POINT" ]; then
-        if ! mkdir -p "$MOUNT_POINT"; then
+        mkdir -p "$MOUNT_POINT" 2> /dev/null
+        if [ $? -ne 0 ]; then
             dialog --msgbox "Failed to create mount point $MOUNT_POINT." 6 50
             return
         fi
     fi
 
-    # Attempt to mount the partition, ensure both variables are properly quoted
-    if ! mount "$PARTITION" "$MOUNT_POINT"; then
+    # Attempt to mount the partition
+    mount "$PARTITION" "$MOUNT_POINT" 2> /dev/null
+    if [ $? -ne 0 ]; then
         dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT. Please check that the partition and mount point are correct." 6 50
         return
     fi
