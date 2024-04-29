@@ -177,7 +177,7 @@ repo_input() {
     fi
 
     exec 3>&1
-    DESTINATION=$(dialog --inputbox "Enter the directory where you want to clone the repositories:" 10 60 2>&1 1>&3)
+    DESTINATION=$(dialog --inputbox "Enter the directory where you want to clone the repositories:" --dselect 10 60 2>&1 1>&3)
     exec 3>&-
 
     if [[ -z "$DESTINATION" ]]; then
@@ -214,7 +214,7 @@ repo_input() {
 # Create Profile containing path to repo for Kiss package manager
 create_profile() {
     # Use dialog to get the directory from the user
-    DEST=$(dialog --stdout --title "Profile Directory" --fselect "$HOME/" 14 60)
+    DEST=$(dialog --stdout --title "Profile Directory" --fselect 14 60)
     if [ -z "$DEST" ]; then
         dialog --title "Error" --msgbox "No directory entered. Exiting." 5 40
         return
