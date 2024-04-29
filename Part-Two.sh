@@ -51,11 +51,17 @@ kiss_install() {
         return
     fi
 
-    # Build and install the packages
-    if ! yes | kiss b $PACKAGE_LIST; then
-        dialog --msgbox "Installation failed. Please check the logs." 5 50
-        return
-    fi
+    # Build and install the packages one at a time
+    for package in $PACKAGE_LIST; do
+        if ! yes | kiss b "$package"; then
+            dialog --msgbox "Building failed for $package. Please check the logs." 5 50
+            return
+        fi
+        if ! yes | kiss i "$package"; then
+            dialog --msgbox "Installation failed for $package. Please check the logs." 5 50
+            return
+        fi
+    done
 
     # Notify completion
     dialog --msgbox "Installation of packages complete: $PACKAGE_LIST" 6 60
@@ -65,6 +71,7 @@ kiss_install() {
     grep -q "permit nopass root" /etc/doas.conf || echo "permit nopass root" >> /etc/doas.conf
     grep -q "permit nopass :wheel cmd env" /etc/doas.conf || echo "permit nopass :wheel cmd env" >> /etc/doas.conf
 }
+
 
 
 
