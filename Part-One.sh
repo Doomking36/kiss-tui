@@ -160,7 +160,7 @@ start_installation() {
 
     # Setting up Kiss
     dialog --infobox "Setting up Kiss" 3 50
-    if ! chmod u+s /usr/bin/busybox-suid; then
+    if ! chmod u+s /mnt/usr/bin/busybox-suid; then
         dialog --title "Error" --msgbox "Failed to set permissions for busybox-suid." 6 50
         return
     fi
