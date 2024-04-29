@@ -8,12 +8,12 @@ create_partition() {
 
 # Function to select and format a partition
 select_and_format_partition() {
-    # Fetch partition details: device name, size, mount point, and format as dialog radiolist input
-    partitions=$(lsblk -nlp -o NAME,SIZE,MOUNTPOINT,TYPE | awk '/part/ {printf "\"%s\" \"%s %s\" %s\n", $1, $1, $2, "off"}')
+    # Fetch partition details: device name, size, mount point, and format as dialog checklist input
+    partitions=$(lsblk -nlp -o NAME,SIZE,MOUNTPOINT,TYPE | grep 'part' | awk '{print $1, $2, "off"}')
 
-    # Display a radiolist dialog to allow the user to select a partition
-    dialog --radiolist "Select a partition to format:" 20 70 12 ${partitions} 2> /tmp/partition_selection.txt
-    selected_partition=$(cat /tmp/partition_selection.txt)
+    # Display a checklist dialog to allow the user to select a partition
+    dialog --title "Select a partition to format" --checklist "Choose a partition:" 20 70 12 ${partitions} 2> /tmp/partition_selection.txt
+    selected_partition=$(< /tmp/partition_selection.txt)
     rm -f /tmp/partition_selection.txt
 
     # Check if the user selected a partition
@@ -22,54 +22,44 @@ select_and_format_partition() {
         return
     fi
 
-    # Trim whitespace from the selected partition
-    selected_partition=$(echo $selected_partition | xargs)
-
     # Proceed to format the selected partition
     format_partition "$selected_partition"
 }
 
 # Function to format a partition with chosen file system
 format_partition() {
-    local PARTITION="$1"
+    local PARTITION=$1
     local FS_TYPE
 
     # Offer a choice of file systems
     FS_TYPE=$(dialog --menu "Choose the file system type for formatting:" 15 50 6 \
-        1 "ext4" \
-        2 "NTFS" \
-        3 "FAT32" \
-        4 "exFAT" \
-        5 "Btrfs" \
-        6 "XFS" \
+        "ext4" "ext4 - The Fourth Extended FileSystem" \
+        "ntfs" "NTFS - New Technology File System" \
+        "vfat" "VFAT - FAT32 with long filenames" \
+        "exfat" "exFAT - Extended File Allocation Table" \
+        "btrfs" "Btrfs - B-Tree File System" \
+        "xfs" "XFS - X File System" \
         2>&1 >/dev/tty)
 
-    # Translate the user's choice to the correct file system type
-    case $FS_TYPE in
-        1) FS_TYPE="ext4";;
-        2) FS_TYPE="ntfs";;
-        3) FS_TYPE="vfat";;
-        4) FS_TYPE="exfat";;
-        5) FS_TYPE="btrfs";;
-        6) FS_TYPE="xfs";;
-        *) dialog --msgbox "No file system selected or invalid choice." 6 40
-           return ;;
-    esac
+    # Verify that the file system type is selected
+    if [ -z "$FS_TYPE" ]; then
+        dialog --msgbox "No file system selected." 6 40
+        return
+    fi
 
     # Confirm before formatting
-    dialog --yesno "Are you sure you want to format '$PARTITION' as $FS_TYPE? This will erase all data on the partition." 7 60
+    dialog --yesno "Are you sure you want to format $PARTITION as $FS_TYPE? This will erase all data on the partition." 7 60
     if [ $? -ne 0 ]; then
         dialog --msgbox "Formatting canceled." 6 40
         return
     fi
 
     # Attempt to format the partition
-    # Using the 'eval' command to interpret the arguments properly
-    if ! eval "mkfs -t $FS_TYPE -F $PARTITION"; then
-        dialog --msgbox "Failed to format '$PARTITION' as $FS_TYPE." 6 50
+    if ! mkfs -t $FS_TYPE $PARTITION; then
+        dialog --msgbox "Failed to format $PARTITION as $FS_TYPE." 6 50
         return
     fi
-    dialog --msgbox "'$PARTITION' formatted as $FS_TYPE." 6 40
+    dialog --msgbox "$PARTITION formatted as $FS_TYPE." 6 40
 }
 
 # Function to mount a partition
