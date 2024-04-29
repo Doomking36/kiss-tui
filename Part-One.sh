@@ -239,9 +239,10 @@ main_menu() {
             1 "Check if UEFI or BIOS" \
             2 "Create Partition" \
             3 "Format and Mount Disk" \
-            4 "Start Installation" \
-            5 "Clone Repositories" \
-            6 "Create Profile" \
+            4 "Mount Partition" \
+            5 "Start Installation" \
+            6 "Clone Repositories" \
+            7 "Create Profile" \
             2>&1 1>&3)
         exit_status=$?
         exec 3>&-;
@@ -256,9 +257,10 @@ main_menu() {
             1) check_uefi_or_bios ;;
             2) create_partition ;;
             3) select_and_format_partition ;;
-            4) start_installation ;;
-            5) repo_input ;;
-            6) create_profile ;;
+            4) mount_partition ;;
+            5) start_installation ;;
+            6) repo_input ;;
+            7) create_profile ;;
             *) dialog --msgbox "Invalid option or cancelled. Please select a valid option." 6 30 ;;
         esac
     done
