@@ -64,23 +64,19 @@ format_partition() {
 
 # Function to mount a partition
 mount_partition() {
-    # Fetch partition details and ensure we only get the device names, size, and mount points
-    partitions=$(lsblk -nlp -o NAME,SIZE,MOUNTPOINT,TYPE | awk '/part/ {printf "\"%s\" \"%s (%s)\" off ", $1, $1, $2}')
+    # Fetch partition details: device name, size, and use awk to filter partitions
+    partitions=$(lsblk -nlp -o NAME,SIZE | awk '/part/ {print "\"" $1 "\" \"" $1 " (" $2 ")\" off"}')
 
     # Display a radiolist dialog to allow the user to select a partition
     exec 3>&1
     PARTITION=$(dialog --radiolist "Select a partition to mount:" 20 70 12 ${partitions} 2>&1 1>&3)
     exec 3>&-
 
-    # Check if the user canceled the dialog
+    # If no partition was chosen, return
     if [ -z "$PARTITION" ]; then
         dialog --msgbox "No partition selected or canceled." 6 40
         return
     fi
-
-    # The PARTITION variable may have quotes around it depending on the dialog version
-    # We'll remove them to avoid any issues
-    PARTITION=$(echo "$PARTITION" | sed 's/^"//' | sed 's/"$//')
 
     # Prompt for the mount point
     MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
@@ -100,7 +96,7 @@ mount_partition() {
         fi
     fi
 
-    # Attempt to mount the partition
+    # Attempt to mount the partition, ensure both variables are properly quoted
     if ! mount "$PARTITION" "$MOUNT_POINT"; then
         dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT. Please check that the partition and mount point are correct." 6 50
         return
