@@ -177,7 +177,7 @@ repo_input() {
     fi
 
     exec 3>&1
-    DESTINATION=$(dialog --inputbox "Enter the directory where you want to clone the repositories:" --dselect 10 60 2>&1 1>&3)
+    DESTINATION=$(dialog --inputbox "Enter the directory where you want to clone the repositories:" --fselect 10 60 2>&1 1>&3)
     exec 3>&-
 
     if [[ -z "$DESTINATION" ]]; then
