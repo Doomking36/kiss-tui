@@ -227,9 +227,18 @@ create_profile() {
         return
     fi
 
-    # Ensure the directory exists
-    if [ ! -d "$DEST" ]; then
-        mkdir -p "$DEST"
+    # Modify DEST if it contains /mnt to place profile in /mnt but use path without /mnt for KISS_PATH
+    KISS_PATH_DEST="${DEST}"
+    if [[ "$DEST" == /mnt* ]]; then
+        PROFILE_FILE="/mnt/profile"
+        KISS_PATH_DEST="${DEST#/mnt}"  # Remove /mnt from the beginning of the DEST path
+    else
+        PROFILE_FILE="$DEST/profile"
+    fi
+
+    # Ensure the directory for PROFILE_FILE exists
+    if [ ! -d "$(dirname "$PROFILE_FILE")" ]; then
+        mkdir -p "$(dirname "$PROFILE_FILE")"
         if [ $? -ne 0 ]; then
             dialog --title "Error" --msgbox "Failed to create directory. Exiting." 5 50
             return
@@ -243,7 +252,6 @@ create_profile() {
     fi
 
     # Create the profile file
-    local PROFILE_FILE="$DEST/profile"
     if ! touch "$PROFILE_FILE"; then
         dialog --title "Error" --msgbox "Unable to create profile file. Check permissions." 5 60
         return
@@ -255,13 +263,13 @@ create_profile() {
     # Write the environment settings to the profile file
     cat > "$PROFILE_FILE" <<EOF
 # KISS Path Configuration
-export KISS_PATH="${DEST%/}/repo/core"
-KISS_PATH="\$KISS_PATH:${DEST%/}/xorg/extra"
-KISS_PATH="\$KISS_PATH:${DEST%/}/xorg/xorg"
-KISS_PATH="\$KISS_PATH:${DEST%/}/xorg/community"
-KISS_PATH="\$KISS_PATH:${DEST%/}/repo/extra"
-KISS_PATH="\$KISS_PATH:${DEST%/}/repo/wayland"
-KISS_PATH="\$KISS_PATH:${DEST%/}/community/community"
+export KISS_PATH="${KISS_PATH_DEST%/}/repo/core"
+KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/xorg/extra"
+KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/xorg/xorg"
+KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/xorg/community"
+KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/repo/extra"
+KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/repo/wayland"
+KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/community/community"
 
 # Build Flags
 export CFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
