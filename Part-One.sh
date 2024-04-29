@@ -64,50 +64,57 @@ format_partition() {
 
 # Function to mount a partition
 mount_partition() {
-    # Fetch partition details: device name and size
-    partitions=$(lsblk -nlp -o NAME,SIZE,TYPE | awk '/part/ {printf "%s \"%s (%s)\" off ", $1, $1, $2}')
+    # Fetch partition details: device name, size, and remove entries that are not partitions
+    partitions=$(lsblk -nlp -o NAME,SIZE,TYPE,MOUNTPOINT | awk '/part/ && $4=="" {print $1 " " $2}')
 
-    # Check if partitions are available
+    # Ensure that the partitions are available
     if [ -z "$partitions" ]; then
-        dialog --msgbox "No partitions found." 6 40
-        return
+        dialog --msgbox "No unmounted partitions found." 6 40
+        exit 1
     fi
 
-    # Display a radiolist dialog to allow the user to select a partition
-    exec 3>&1
-    PARTITION=$(dialog --radiolist "Select a partition to mount:" 20 70 10 ${partitions} 2>&1 1>&3)
-    exec 3>&-
+    # Use an array to store the partition options for the dialog command
+    options=()
+    for partition in $partitions; do
+        size=$(lsblk -nlp -o SIZE $partition)
+        options+=("$partition" "$size")
+    done
+
+    # Display a menu dialog to allow the user to select a partition
+    PARTITION=$(dialog --menu "Choose a partition to mount:" 20 60 10 "${options[@]}" 3>&1 1>&2 2>&3)
+    clear
 
     # If no partition was chosen, return
     if [ -z "$PARTITION" ]; then
-        dialog --msgbox "No partition selected or canceled." 6 40
-        return
+        echo "No partition selected or canceled."
+        exit 1
     fi
 
     # Prompt for the mount point
-    MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
+    MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 3>&1 1>&2 2>&3)
+    clear
 
     # Check if the user exited the dialog or didn't enter a mount point
     if [ -z "$MOUNT_POINT" ]; then
-        dialog --msgbox "No mount point entered or canceled." 6 40
-        return
+        echo "No mount point entered or canceled."
+        exit 1
     fi
 
     # Ensure the mount point exists or create it
     if [ ! -d "$MOUNT_POINT" ]; then
-        if ! mkdir -p "$MOUNT_POINT"; then
+        mkdir -p "$MOUNT_POINT"
+        if [ $? -ne 0 ]; then
             dialog --msgbox "Failed to create mount point $MOUNT_POINT." 6 50
-            return
+            exit 1
         fi
     fi
 
     # Attempt to mount the partition
     if ! mount "$PARTITION" "$MOUNT_POINT"; then
-        dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT. Please check that the partition and mount point are correct." 6 50
-        return
+        dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT. Check that the partition and mount point are correct." 6 50
+    else
+        dialog --msgbox "$PARTITION successfully mounted to $MOUNT_POINT." 6 40
     fi
-
-    dialog --msgbox "$PARTITION successfully mounted to $MOUNT_POINT." 6 40
 }
 
 # Function to check if the system is UEFI or BIOS
