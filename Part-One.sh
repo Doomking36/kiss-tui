@@ -177,7 +177,7 @@ repo_input() {
     fi
 
     # Use dialog to create a directory selection menu
-    DESTINATION=$(dialog --stdout --title "Select Clone Directory" --dselect "$HOME/" 14 60)
+    DESTINATION=$(dialog --stdout --title "Select Clone Directory" --dselect 14 60)
 
     # Check if the user exited the dialog or didn't enter a destination
     if [ -z "$DESTINATION" ]; then
