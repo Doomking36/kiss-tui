@@ -64,26 +64,28 @@ format_partition() {
 
 # Function to mount a partition
 mount_partition() {
-    # Fetch all partition details: device name and size
-    partitions=$(lsblk -nlp -o NAME,SIZE,TYPE | awk '/part/ {print "\"" $1 "\" \"" $1 " (" $2 ")\" \"off\""}')
+    # Fetch partition details: device name and size
+    partitions=$(lsblk -nlp -o NAME,SIZE,TYPE | awk '/part/ {printf "%s \"%s (%s)\" off ", $1, $1, $2}')
+
+    # Check if partitions are available
+    if [ -z "$partitions" ]; then
+        dialog --msgbox "No partitions found." 6 40
+        return
+    fi
 
     # Display a radiolist dialog to allow the user to select a partition
     exec 3>&1
-    PARTITION=$(dialog --radiolist "Select a partition to mount:" 20 70 4 ${partitions} 2>&1 1>&3)
+    PARTITION=$(dialog --radiolist "Select a partition to mount:" 20 70 10 ${partitions} 2>&1 1>&3)
     exec 3>&-
 
-    # Check if the user canceled the dialog
+    # If no partition was chosen, return
     if [ -z "$PARTITION" ]; then
         dialog --msgbox "No partition selected or canceled." 6 40
         return
     fi
 
-    # Remove quotes that may have been wrongly preserved
-    PARTITION=$(echo "$PARTITION" | sed 's/^"//' | sed 's/"$//')
-
     # Prompt for the mount point
     MOUNT_POINT=$(dialog --inputbox "Enter the mount point (e.g., /mnt or /newroot):" 10 50 2>&1 1>&3)
-    exec 3>&-
 
     # Check if the user exited the dialog or didn't enter a mount point
     if [ -z "$MOUNT_POINT" ]; then
@@ -93,16 +95,14 @@ mount_partition() {
 
     # Ensure the mount point exists or create it
     if [ ! -d "$MOUNT_POINT" ]; then
-        mkdir -p "$MOUNT_POINT" 2> /dev/null
-        if [ $? -ne 0 ]; then
+        if ! mkdir -p "$MOUNT_POINT"; then
             dialog --msgbox "Failed to create mount point $MOUNT_POINT." 6 50
             return
         fi
     fi
 
     # Attempt to mount the partition
-    mount "$PARTITION" "$MOUNT_POINT" 2> /dev/null
-    if [ $? -ne 0 ]; then
+    if ! mount "$PARTITION" "$MOUNT_POINT"; then
         dialog --msgbox "Failed to mount $PARTITION on $MOUNT_POINT. Please check that the partition and mount point are correct." 6 50
         return
     fi
