@@ -177,7 +177,7 @@ repo_input() {
     fi
 
     # Use dialog to create a directory selection menu
-    DESTINATION=$(dialog --stdout --title "Select Clone Directory" --dselect 14 60)
+    DESTINATION=$(dialog --stdout --title "Select Clone Directory" --dselect "/" 14 60)
 
     # Check if the user exited the dialog or didn't enter a destination
     if [ -z "$DESTINATION" ]; then
@@ -221,7 +221,7 @@ repo_input() {
 # Create Profile containing path to repo for Kiss package manager
 create_profile() {
     # Use dialog to get the directory from the user
-    DEST=$(dialog --stdout --title "Profile Directory" --fselect 14 60)
+    DEST=$(dialog --stdout --title "Profile Directory" --fselect "/" 14 60)
     if [ -z "$DEST" ]; then
         dialog --title "Error" --msgbox "No directory entered. Exiting." 5 40
         return
