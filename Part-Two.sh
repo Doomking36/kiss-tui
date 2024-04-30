@@ -1,7 +1,4 @@
-#!/bin/bash
-
-# Loop control variable
-keep_running=true
+#!/bin/sh
 
 # Update Kiss
 kiss_update() {
@@ -290,39 +287,40 @@ grub_install() {
 
 # Main Menu
 main_menu() {
-    exec 3>&1;
-    SELECTION=$(dialog --clear --title "Main Menu" --menu "Choose an option:" 20 60 10 \
-        1 "Update Kiss" \
-        2 "Install Kiss Packages" \
-        3 "Set Hostname" \
-        4 "Set Root Password" \
-        5 "Add User" \
-        6 "Generate Fstab" \
-        7 "Install Grub" \
-        0 "Exit" \
-        2>&1 1>&3)
-    exec 3>&-;
+    keep_running=true
+    while $keep_running; do
+        exec 3>&1;
+        SELECTION=$(dialog --clear --title "Main Menu" --menu "Choose an option:" 20 60 10 \
+            1 "Update Kiss" \
+            2 "Install Kiss Packages" \
+            3 "Set Hostname" \
+            4 "Set Root Password" \
+            5 "Add User" \
+            6 "Generate Fstab" \
+            7 "Install Grub" \
+            0 "Exit" \
+            2>&1 1>&3)
+        exit_status=$?
+        exec 3>&-;
 
-    # Handle user actions based on selection
-    case $SELECTION in
-        1) kiss_update ;;
-        2) kiss_install ;;
-        3) get_hostname ;;
-        4) set_root_password ;;
-        5) add_user ;;
-        6) genfstab ;;
-        7) grub_install ;;
-        0) dialog --msgbox "Exiting script." 5 30
-           keep_running=false
-           ;;
-        *) dialog --msgbox "Invalid option or cancelled. Please select a valid option." 6 30 ;;
-    esac
+        if [ $exit_status -eq 1 ]; then  # User pressed 'Exit'
+            dialog --msgbox "Exiting script." 5 30
+            keep_running=false
+            continue
+        fi
+
+        case $SELECTION in
+            1) kiss_update ;;
+            2) kiss_install ;;
+            3) get_hostname ;;
+            4) set_root_password ;;
+            5) add_user ;;
+            6) genfstab ;;
+            7) grub_install ;;
+            *) dialog --msgbox "Invalid option or cancelled. Please select a valid option." 6 30 ;;
+        esac
+    done
 }
 
-# Initialize running variable
-keep_running=true
-
-# Loop the menu until the user exits
-while $keep_running; do
-    main_menu
-done
+# Start the script by calling main menu
+main_menu
