@@ -298,7 +298,6 @@ main_menu() {
             5 "Add User" \
             6 "Generate Fstab" \
             7 "Install Grub" \
-            0 "Exit" \
             2>&1 1>&3)
         exit_status=$?
         exec 3>&-;
