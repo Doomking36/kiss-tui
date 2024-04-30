@@ -141,6 +141,9 @@ add_user() {
         return
     fi
 
+    # Get home directory from user input
+    HOME_DIR=$(dialog --inputbox "Enter home directory for $USERNAME or leave blank for default:" 10 50 2>&1 1>&3)
+
     # Get password from user input
     USER_PASSWORD=$(dialog --insecure --passwordbox "Enter password for $USERNAME:" 10 50 2>&1 1>&3)
     if [ -z "$USER_PASSWORD" ]; then
@@ -150,21 +153,44 @@ add_user() {
         return
     fi
 
+    # Choose groups from a checklist
+    GROUPS=$(dialog --separate-output --checklist "Select groups to add $USERNAME to:" 15 50 5 \
+        "users" "General users group" off \
+        "audio" "Access to audio devices" off \
+        "video" "Access to video devices" off \
+        "input" "Access to input devices" off \
+        "wheel" "Administrative group" on 2>&1 1>&3)
+    if [ -z "$GROUPS" ]; then
+        # If no group is selected, proceed with no group
+        dialog --msgbox "No group selected, user will not be added to any specific groups." 6 50
+    fi
+
     # Close file descriptor 3
     exec 3>&-
 
-    # Add the user and add to wheel group
-    useradd -m -G wheel "$USERNAME"
+    # Add the user and optionally specify home directory
+    if [ -z "$HOME_DIR" ]; then
+        adduser "$USERNAME"
+    else
+        adduser -h "$HOME_DIR" "$USERNAME"
+    fi
+
+    # Add user to selected groups
+    for GROUP in $GROUPS; do
+        addgroup "$USERNAME" "$GROUP"
+    done
+
     if [ $? -eq 0 ]; then
         # Set the user's password
         echo "$USERNAME:$USER_PASSWORD" | chpasswd
         # Confirm user addition
-        dialog --msgbox "User $USERNAME added to wheel group" 6 40
+        dialog --msgbox "User $USERNAME added to selected groups and home directory set" 6 50
     else
         # Handle error in user addition
         dialog --msgbox "Failed to add user $USERNAME" 6 30
     fi
 }
+
 
 
 
