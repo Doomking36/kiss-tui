@@ -250,6 +250,9 @@ create_profile() {
         JOBS=$(nproc)  # Default to the number of processors
     fi
 
+    # Prompt user for their timezone
+    TZ=$(dialog --stdout --title "Time Zone" --inputbox "Enter your timezone (e.g., CDT). Leave empty if you do not wish to set it:" 8 50)
+
     # Create the profile file
     if ! touch "$PROFILE_FILE"; then
         dialog --title "Error" --msgbox "Unable to create profile file. Check permissions." 5 60
@@ -259,7 +262,7 @@ create_profile() {
     dialog --infobox "Creating profile at $PROFILE_FILE..." 3 50
     sleep 2  # Allows the message to be visible before moving on
 
-    # Write the environment settings to the profile file
+    # Start writing the profile settings to the profile file
     cat > "$PROFILE_FILE" <<EOF
 # KISS Path Configuration
 export KISS_PATH="$KISS_PATH_DEST/repo/core"
@@ -275,14 +278,17 @@ export CFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
 export CXXFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
 export MAKEFLAGS="-j$JOBS"
 export SAMUFLAGS="-j$JOBS"
-
-# Set date and time
-export TZ=CDT
 EOF
+
+    # Conditionally add the timezone setting
+    if [ ! -z "$TZ" ]; then
+        echo "export TZ=$TZ" >> "$PROFILE_FILE"
+    fi
 
     # Inform the user of successful profile creation using dialog
     dialog --title "Profile Created" --msgbox "Profile created successfully at $PROFILE_FILE" 6 50
 }
+
 
 
 # Main Menu
