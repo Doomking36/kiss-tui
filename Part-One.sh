@@ -223,17 +223,23 @@ repo_input() {
 
 # Create Profile containing path to repo for Kiss package manager
 create_profile() {
-    if [ -z "$DESTINATION" ]; then
-        dialog --title "Error" --msgbox "No destination directory is set. Please run repo_input first." 5 40
+    DEST=$(dialog --stdout --title "Profile Directory" --fselect "/" 14 60)
+    if [ -z "$DEST" ]; then
+        dialog --title "Error" --msgbox "No directory entered. Exiting." 5 40
         return
     fi
 
+    KISS_PROFILE_DEST="{$DEST}"
+    if [[ "$DEST" == /mnt* ]]; then
+        KISS_PROFILE_DEST="${DEST#/mnt}"
+    fi
+    PROFILE_FILE="$DEST/profile"
+    
     # Adjust KISS_PATH_DEST to exclude '/mnt' if present in $DESTINATION
     KISS_PATH_DEST="${DESTINATION}"
     if [[ "$DESTINATION" == /mnt* ]]; then
         KISS_PATH_DEST="${DESTINATION#/mnt}"
     fi
-    PROFILE_FILE="$DESTINATION/profile"
 
     # Ensure the directory for PROFILE_FILE exists
     if [ ! -d "$(dirname "$PROFILE_FILE")" ]; then
