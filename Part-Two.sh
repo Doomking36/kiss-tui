@@ -31,7 +31,7 @@ kiss_install() {
     exec 3>&-
 
     # Set default package list based on the system type
-    PACKAGE_LIST="baseinit grub e2fsprogs dhcpcd ncurses libelf perl vim sqlite libudev-zero util-linux opendoas"
+    PACKAGE_LIST="baseinit grub e2fsprogs ncurses libelf libudev-zero util-linux"
     [ "$SYSTEM_TYPE" -eq 2 ] && PACKAGE_LIST="$PACKAGE_LIST efibootmgr dosfstools"
 
     # Ask the user for additional packages to install
