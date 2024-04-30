@@ -228,7 +228,7 @@ create_profile() {
     fi
 
     # Modify DEST if it contains /mnt to place profile in /mnt but use path without /mnt for KISS_PATH
-    KISS_PATH_DEST="${DEST}"
+    KISS_PATH_DEST="$DEST/profile"
     if [[ "$DEST" == /mnt* ]]; then
         PROFILE_FILE="${DEST}"
         KISS_PATH_DEST="${DEST#/mnt}"  # Remove /mnt from the beginning of the DEST path
