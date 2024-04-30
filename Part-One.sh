@@ -263,13 +263,13 @@ create_profile() {
     # Write the environment settings to the profile file
     cat > "$PROFILE_FILE" <<EOF
 # KISS Path Configuration
-export KISS_PATH="${KISS_PATH_DEST%/}/repo/core"
-KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/xorg/extra"
-KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/xorg/xorg"
-KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/xorg/community"
-KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/repo/extra"
-KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/repo/wayland"
-KISS_PATH="\$KISS_PATH:${KISS_PATH_DEST%/}/community/community"
+export KISS_PATH="${$DESTINATION}/repo/core"
+KISS_PATH="\$KISS_PATH:${$DESTINATION}/xorg/extra"
+KISS_PATH="\$KISS_PATH:${$DESTINATION}/xorg/xorg"
+KISS_PATH="\$KISS_PATH:${$DESTINATION}/xorg/community"
+KISS_PATH="\$KISS_PATH:${$DESTINATION}/repo/extra"
+KISS_PATH="\$KISS_PATH:${$DESTINATION}/repo/wayland"
+KISS_PATH="\$KISS_PATH:${$DESTINATION}/community/community"
 
 # Build Flags
 export CFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
