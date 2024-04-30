@@ -34,9 +34,9 @@ kiss_install() {
     PACKAGE_LIST="baseinit grub e2fsprogs ncurses libelf libudev-zero util-linux"
     [ "$SYSTEM_TYPE" -eq 2 ] && PACKAGE_LIST="$PACKAGE_LIST efibootmgr dosfstools"
 
-    # Ask the user for additional packages to install
+    # Ask the user for additional packages to install, showing default packages
     exec 3>&1
-    ADDITIONAL_PACKAGES=$(dialog --inputbox "Enter additional packages to install separated by spaces (optional):" 10 60 2>&1 1>&3)
+    ADDITIONAL_PACKAGES=$(dialog --inputbox "Current default packages are: $PACKAGE_LIST\nEnter additional packages to install separated by spaces (optional):" 12 70 2>&1 1>&3)
     exec 3>&-
 
     # Append additional packages if provided
@@ -66,11 +66,17 @@ kiss_install() {
     # Notify completion
     dialog --msgbox "Installation of packages complete: $PACKAGE_LIST" 6 60
 
-    # Configure doas.conf safely
-    grep -q "permit persist :wheel" /etc/doas.conf || echo "permit persist :wheel" >> /etc/doas.conf
-    grep -q "permit nopass root" /etc/doas.conf || echo "permit nopass root" >> /etc/doas.conf
-    grep -q "permit nopass :wheel cmd env" /etc/doas.conf || echo "permit nopass :wheel cmd env" >> /etc/doas.conf
+    # Check if doas is installed before configuring doas.conf
+    if command -v doas >/dev/null; then
+        # Configure doas.conf safely
+        grep -q "permit persist :wheel" /etc/doas.conf || echo "permit persist :wheel" >> /etc/doas.conf
+        grep -q "permit nopass root" /etc/doas.conf || echo "permit nopass root" >> /etc/doas.conf
+        grep -q "permit nopass :wheel cmd env" /etc/doas.conf || echo "permit nopass :wheel cmd env" >> /etc/doas.conf
+    else
+        dialog --msgbox "doas not installed, skipping configuration." 5 50
+    fi
 }
+
 
 
 
