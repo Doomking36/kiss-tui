@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Function to create a partition
 create_partition() {
