@@ -168,6 +168,9 @@ start_installation() {
     dialog --title "Installation Complete" --msgbox "KISS chroot environment has been successfully installed and set up on /mnt." 6 50
 }
 
+# Global variable for destination directory
+DESTINATION=""
+
 # Function to clone specific repositories with user-specified destination
 repo_input() {
     # Check if git is installed
@@ -220,21 +223,17 @@ repo_input() {
 
 # Create Profile containing path to repo for Kiss package manager
 create_profile() {
-    # Use dialog to get the directory from the user
-    DEST=$(dialog --stdout --title "Profile Directory" --fselect "/" 14 60)
-    if [ -z "$DEST" ]; then
-        dialog --title "Error" --msgbox "No directory entered. Exiting." 5 40
+    if [ -z "$DESTINATION" ]; then
+        dialog --title "Error" --msgbox "No destination directory is set. Please run repo_input first." 5 40
         return
     fi
 
-    # Modify DEST if it contains /mnt to place profile in /mnt but use path without /mnt for KISS_PATH
-    KISS_PATH_DEST="{$DEST}"
-    if [[ "$DEST" == /mnt* ]]; then
-        PROFILE_FILE="$DEST/profile"
-        KISS_PATH_DEST="${DEST#/mnt}"  # Remove /mnt from the beginning of the DEST path
-    else
-        PROFILE_FILE="$DEST/profile"
+    # Adjust KISS_PATH_DEST to exclude '/mnt' if present in $DESTINATION
+    KISS_PATH_DEST="${DESTINATION}"
+    if [[ "$DESTINATION" == /mnt* ]]; then
+        KISS_PATH_DEST="${DESTINATION#/mnt}"
     fi
+    PROFILE_FILE="$DESTINATION/profile"
 
     # Ensure the directory for PROFILE_FILE exists
     if [ ! -d "$(dirname "$PROFILE_FILE")" ]; then
@@ -263,13 +262,13 @@ create_profile() {
     # Write the environment settings to the profile file
     cat > "$PROFILE_FILE" <<EOF
 # KISS Path Configuration
-export KISS_PATH="${$DESTINATION}/repo/core"
-KISS_PATH="\$KISS_PATH:${$DESTINATION}/xorg/extra"
-KISS_PATH="\$KISS_PATH:${$DESTINATION}/xorg/xorg"
-KISS_PATH="\$KISS_PATH:${$DESTINATION}/xorg/community"
-KISS_PATH="\$KISS_PATH:${$DESTINATION}/repo/extra"
-KISS_PATH="\$KISS_PATH:${$DESTINATION}/repo/wayland"
-KISS_PATH="\$KISS_PATH:${$DESTINATION}/community/community"
+export KISS_PATH="$KISS_PATH_DEST/repo/core"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/extra"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/xorg"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/community"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/repo/extra"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/repo/wayland"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/community/community"
 
 # Build Flags
 export CFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
@@ -284,6 +283,7 @@ EOF
     # Inform the user of successful profile creation using dialog
     dialog --title "Profile Created" --msgbox "Profile created successfully at $PROFILE_FILE" 6 50
 }
+
 
 # Main Menu
 main_menu() {
