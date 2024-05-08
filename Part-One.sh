@@ -234,14 +234,12 @@ create_profile() {
         KISS_PROFILE_DEST="${DEST#/mnt}"
     fi
     PROFILE_FILE="$DEST/profile"
-    
-    # Adjust KISS_PATH_DEST to exclude '/mnt' if present in $DESTINATION
+
     KISS_PATH_DEST="${DESTINATION}"
     if [[ "$DESTINATION" == /mnt* ]]; then
         KISS_PATH_DEST="${DESTINATION#/mnt}"
     fi
 
-    # Ensure the directory for PROFILE_FILE exists
     if [ ! -d "$(dirname "$PROFILE_FILE")" ]; then
         mkdir -p "$(dirname "$PROFILE_FILE")"
         if [ $? -ne 0 ]; then
@@ -250,25 +248,36 @@ create_profile() {
         fi
     fi
 
-    # Prompt user for the number of parallel jobs
     JOBS=$(dialog --stdout --title "Number of Jobs" --inputbox "Enter the number of parallel jobs for make (default: nproc):" 8 50 "$(nproc)")
     if [ -z "$JOBS" ]; then
-        JOBS=$(nproc)  # Default to the number of processors
+        JOBS=$(nproc)
     fi
 
-    # Prompt user for their timezone
     TZ=$(dialog --stdout --title "Time Zone" --inputbox "Enter your timezone (e.g., CDT). Leave empty if you do not wish to set it:" 8 50)
 
-    # Create the profile file
     if ! touch "$PROFILE_FILE"; then
         dialog --title "Error" --msgbox "Unable to create profile file. Check permissions." 5 60
         return
     fi
 
     dialog --infobox "Creating profile at $PROFILE_FILE..." 3 50
-    sleep 2  # Allows the message to be visible before moving on
+    sleep 2
 
-    # Start writing the profile settings to the profile file
+    # Ask user for their preference on CFLAGS
+    CFLAG_OPTION=$(dialog --stdout --title "Optimization Level" --menu "Choose the optimization level for compilation:" 15 50 3 \
+        1 "Optimize for size (-Os)" \
+        2 "Optimize for speed (-O2)" \
+        3 "Other (specify)")
+
+    case $CFLAG_OPTION in
+        1) CFLAGS="-march=x86-64 -mtune=generic -pipe -Os" ;;
+        2) CFLAGS="-march=x86-64 -mtune=generic -pipe -O2" ;;
+        3) 
+            CUSTOM_OPT=$(dialog --stdout --title "Custom Optimization" --inputbox "Enter custom optimization flag (e.g., -O3):" 8 50)
+            CFLAGS="-march=x86-64 -mtune=generic -pipe $CUSTOM_OPT"
+            ;;
+    esac
+
     cat > "$PROFILE_FILE" <<EOF
 # KISS Path Configuration
 export KISS_PATH="$KISS_PATH_DEST/repo/core"
@@ -280,20 +289,19 @@ KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/repo/wayland"
 KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/community/community"
 
 # Build Flags
-export CFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
-export CXXFLAGS="-march=x86-64 -mtune=generic -pipe -Os"
+export CFLAGS="$CFLAGS"
+export CXXFLAGS="$CFLAGS"
 export MAKEFLAGS="-j$JOBS"
 export SAMUFLAGS="-j$JOBS"
 EOF
 
-    # Conditionally add the timezone setting
     if [ ! -z "$TZ" ]; then
         echo "export TZ=$TZ" >> "$PROFILE_FILE"
     fi
 
-    # Inform the user of successful profile creation using dialog
     dialog --title "Profile Created" --msgbox "Profile created successfully at $PROFILE_FILE" 6 50
 }
+
 
 
 
