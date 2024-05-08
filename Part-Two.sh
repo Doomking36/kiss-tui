@@ -76,6 +76,17 @@ kiss_install() {
 
 
 
+# Get the latest linux kernel
+fetch_linux_kernel() {
+
+    # Check if git is installed
+    if ! command -v git &>/dev/null; then
+        dialog --msgbox "Git is not installed. Please install git and try again." 6 50
+        return
+    fi
+    
+    git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/
+}
 
 
 # Function to get hostname
@@ -293,11 +304,12 @@ main_menu() {
         SELECTION=$(dialog --clear --title "Main Menu" --menu "Choose an option:" 20 60 10 \
             1 "Update Kiss" \
             2 "Install Kiss Packages" \
-            3 "Set Hostname" \
-            4 "Set Root Password" \
-            5 "Add User" \
-            6 "Generate Fstab" \
-            7 "Install Grub" \
+            3 "Fetch Latest Linux Kernel" \
+            4 "Set Hostname" \
+            5 "Set Root Password" \
+            6 "Add User" \
+            7 "Generate Fstab" \
+            8 "Install Grub" \
             2>&1 1>&3)
         exit_status=$?
         exec 3>&-;
@@ -311,11 +323,12 @@ main_menu() {
         case $SELECTION in
             1) kiss_update ;;
             2) kiss_install ;;
-            3) get_hostname ;;
-            4) set_root_password ;;
-            5) add_user ;;
-            6) genfstab ;;
-            7) grub_install ;;
+            3) fetch_linux_kernel ;;
+            4) get_hostname ;;
+            5) set_root_password ;;
+            6) add_user ;;
+            7) genfstab ;;
+            8) grub_install ;;
             *) dialog --msgbox "Invalid option or cancelled. Please select a valid option." 6 30 ;;
         esac
     done
