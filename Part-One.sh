@@ -221,6 +221,7 @@ repo_input() {
     dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/xorg" 10 50
 }
 
+
 # Create Profile containing path to repo for Kiss package manager
 create_profile() {
     DEST=$(dialog --stdout --title "Profile Directory" --fselect "/" 14 60)
@@ -263,6 +264,26 @@ create_profile() {
     dialog --infobox "Creating profile at $PROFILE_FILE..." 3 50
     sleep 2
 
+    # Select -march flag
+    MARCH=$(dialog --stdout --title "Architecture" --menu "Choose your architecture:" 10 50 2 \
+        1 "x86-64 (default)" \
+        2 "Enter custom architecture")
+
+    case $MARCH in
+        1) MARCH="x86-64" ;;
+        2) MARCH=$(dialog --stdout --title "Custom Architecture" --inputbox "Enter custom architecture (e.g., armv7):" 8 50)
+    esac
+
+    # Select -mtune flag
+    MTUNE=$(dialog --stdout --title "Tuning" --menu "Choose processor tuning preference:" 10 50 2 \
+        1 "native (default)" \
+        2 "generic")
+
+    case $MTUNE in
+        1) MTUNE="native" ;;
+        2) MTUNE="generic" ;;
+    esac
+
     # Ask user for their preference on CFLAGS
     CFLAG_OPTION=$(dialog --stdout --title "Optimization Level" --menu "Choose the optimization level for compilation:" 15 50 3 \
         1 "Optimize for size (-Os)" \
@@ -270,11 +291,11 @@ create_profile() {
         3 "Other (specify)")
 
     case $CFLAG_OPTION in
-        1) CFLAGS="-march=x86-64 -mtune=generic -pipe -Os" ;;
-        2) CFLAGS="-march=x86-64 -mtune=generic -pipe -O2" ;;
+        1) CFLAGS="-march=$MARCH -mtune=$MTUNE -pipe -Os" ;;
+        2) CFLAGS="-march=$MARCH -mtune=$MTUNE -pipe -O2" ;;
         3) 
             CUSTOM_OPT=$(dialog --stdout --title "Custom Optimization" --inputbox "Enter custom optimization flag (e.g., -O3):" 8 50)
-            CFLAGS="-march=x86-64 -mtune=generic -pipe $CUSTOM_OPT"
+            CFLAGS="-march=$MARCH -mtune=$MTUNE -pipe $CUSTOM_OPT"
             ;;
     esac
 
