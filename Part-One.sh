@@ -334,7 +334,7 @@ main_menu() {
         SELECTION=$(dialog --cancel-label "Exit" --clear --title "Main Menu" --menu "Choose an option:" 20 60 8 \
             1 "Check if UEFI or BIOS" \
             2 "Create Partition" \
-            3 "Format and Mount Disk" \
+            3 "Format Disk" \
             4 "Mount Partition" \
             5 "Start Installation" \
             6 "Clone Repositories" \
