@@ -266,6 +266,26 @@ genfstab() {
 
 # Install Grub on either BIOS or UEFI system
 grub_install() {
+    # Ask for the partition to run tune2fs
+    exec 3>&1
+    TUNE_DEVICE=$(dialog --inputbox "Enter the device partition for tune2fs (e.g., sda1, sda2, etc.):" 10 60 2>&1 1>&3)
+    exec 3>&-
+
+    if [ -z "$TUNE_DEVICE" ]; then
+        dialog --msgbox "No device entered for tune2fs. Aborting installation." 5 50
+        return
+    fi
+
+    # Execute the tune2fs command
+    tune2fs -O ^metadata_csum_seed /dev/$TUNE_DEVICE
+    if [ $? -ne 0 ]; then
+        dialog --msgbox "Failed to run tune2fs on /dev/$TUNE_DEVICE. Aborting installation." 6 50
+        return
+    fi
+
+    # Add the GRUB_DISABLE_OS_PROBER setting to /etc/default/grub
+    echo GRUB_DISABLE_OS_PROBER=false >> /etc/default/grub
+
     # Present the user with BIOS or UEFI options
     exec 3>&1
     SYSTEM_TYPE=$(dialog --menu "Select the system type for GRUB installation:" 10 50 2 \
