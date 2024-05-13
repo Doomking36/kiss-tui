@@ -78,14 +78,33 @@ kiss_install() {
 
 # Get the latest linux kernel
 fetch_linux_kernel() {
-
-    # Check if git is installed
-    if ! command -v git &>/dev/null; then
-        dialog --msgbox "Git is not installed. Please install git and try again." 6 50
+    # Check if elinks is installed
+    if ! command -v elinks &>/dev/null; then
+        dialog --msgbox "Elinks is not installed. Please install elinks and try again." 6 50
         return
     fi
-    
-    git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/
+
+    # Check if dialog is installed
+    if ! command -v dialog &>/dev/null; then
+        echo "Dialog is not installed. Please install dialog and try again."
+        return
+    fi
+
+    # Prompt the user to visit the kernel website using elinks
+    dialog --yesno "Would you like to open elinks to browse and download the latest Linux kernel?" 7 60
+    response=$?
+    case $response in
+        0) 
+            dialog --msgbox "Use elinks to browse to 'https://www.kernel.org/' and download the desired kernel version. The downloaded file will be saved to the current directory." 8 70
+            elinks https://www.kernel.org/
+            ;;
+        1) 
+            dialog --msgbox "Operation canceled." 6 50
+            ;;
+        255) 
+            dialog --msgbox "Operation canceled." 6 50
+            ;;
+    esac
 }
 
 
