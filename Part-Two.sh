@@ -76,7 +76,7 @@ kiss_install() {
 
 
 
-# Get the latest linux kernel
+# Browse linux kernel using elinks
 fetch_linux_kernel() {
     # Check if elinks is installed
     if ! command -v elinks &>/dev/null; then
@@ -343,7 +343,7 @@ main_menu() {
         SELECTION=$(dialog --clear --title "Main Menu" --menu "Choose an option:" 20 60 10 \
             1 "Update Kiss" \
             2 "Install Kiss Packages" \
-            3 "Fetch Latest Linux Kernel" \
+            3 "Fetch Linux Kernel" \
             4 "Set Hostname" \
             5 "Set Root Password" \
             6 "Add User" \
