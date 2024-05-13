@@ -91,7 +91,7 @@ fetch_linux_kernel() {
     fi
 
     # Prompt the user to visit the kernel website using elinks
-    dialog --yesno "Would you like to open elinks to browse and download the latest Linux kernel?" 7 60
+    dialog --yesno "Would you like to open elinks to browse and download Linux kernel?" 7 60
     response=$?
     case $response in
         0) 
