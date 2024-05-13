@@ -108,6 +108,91 @@ fetch_linux_kernel() {
 }
 
 
+# Essential kernel configuration
+essential_kernel_config() {
+    # Check if dialog is installed
+    if ! command -v dialog &>/dev/null; then
+        echo "Dialog is not installed. Please install dialog and try again."
+        return
+    fi
+
+    # Ask for the path to the kernel .config file
+    exec 3>&1
+    CONFIG_PATH=$(dialog --inputbox "Enter the path to the kernel .config file:" 10 60 2>&1 1>&3)
+    exec 3>&-
+
+    if [ -z "$CONFIG_PATH" ]; then
+        dialog --msgbox "No path entered. Aborting configuration." 5 50
+        return
+    fi
+
+    if [ ! -f "$CONFIG_PATH" ]; then
+        dialog --msgbox "The specified .config file does not exist. Aborting configuration." 6 50
+        return
+    fi
+
+    # Confirm the modification of the .config file
+    dialog --yesno "Are you sure you want to modify the .config file at $CONFIG_PATH with the essential kernel configurations?" 7 60
+    if [ $? -ne 0 ]; then
+        dialog --msgbox "Kernel configuration modification aborted." 5 50
+        return
+    fi
+
+    # Append the configuration settings to the .config file
+    cat <<EOL >> $CONFIG_PATH
+CONFIG_64BIT=y
+CONFIG_ACPI=y
+CONFIG_EFI=y
+CONFIG_FB=y
+CONFIG_FB_EFI=y
+CONFIG_FB_SIMPLE=y
+CONFIG_SMP=y
+CONFIG_X86_MPARSE=n
+CONFIG_NR_CPUS=4
+CONFIG_SCHED_CLUSTER=n
+CONFIG_SCHED_MC=n
+CONFIG_X86_MSR=y
+CONFIG_X86_CPUID=y
+CONFIG_X86_KERNEL_IBT=n
+CONFIG_X86_INTEL_MEMORY_PROTECTION_KEYS=n
+CONFIG_X86_MCE=y
+CONFIG_X86_MCE_INTEL=y
+CONFIG_PERF_EVENTS_INTEL_UNCORE=y
+CONFIG_PREF_EVENTS_INTEL_RAPL=y
+CONFIG_PREF_EVENTS_INTEL_CSTATE=y
+CONFIG_DRM=y
+CONFIG_DRM_SIMPLEDRM=y
+CONFIG_PCI=y
+CONFIG_DRM_TTM=y
+CONFIG_DRM_TTM_HELPER=y
+CONFIG_SOUND=y
+CONFIG_SND=y
+CONFIG_SND_TIMER=y
+CONFIG_SND_SUPPORT_OLD_API=n
+CONFIG_SND_CTL_FAST_LOOKUP=n
+CONFIG_BLOCK=y
+CONFIG_EXT4_FS=y
+CONFIG_USB_SUPPORT=y
+CONFIG_USB=y
+CONFIG_USB_HID=y
+CONFIG_RFKILL=y
+CONFIG_ETHERNET=y
+CONFIG_E1000=y
+CONFIG_DRM_I915=y
+CONFIG_PCI_MSI=y
+CONFIG_VMD=y
+CONFIG_INPUT_MOUSE=y
+CONFIG_INPUT_KEYBOARD=y
+EOL
+
+    if [ $? -eq 0 ]; then
+        dialog --msgbox "Kernel configuration updated successfully." 5 50
+    else
+        dialog --msgbox "Failed to update the kernel configuration." 5 50
+    fi
+}
+
+
 # Function to get hostname
 get_hostname() {
     # Prompt the user for a new hostname
@@ -344,11 +429,12 @@ main_menu() {
             1 "Update Kiss" \
             2 "Install Kiss Packages" \
             3 "Fetch Linux Kernel" \
-            4 "Set Hostname" \
-            5 "Set Root Password" \
-            6 "Add User" \
-            7 "Generate Fstab" \
-            8 "Install Grub" \
+            4 "Essential Linux Kernel Config" \
+            5 "Set Hostname" \
+            6 "Set Root Password" \
+            7 "Add User" \
+            8 "Generate Fstab" \
+            9 "Install Grub" \
             2>&1 1>&3)
         exit_status=$?
         exec 3>&-;
@@ -363,11 +449,12 @@ main_menu() {
             1) kiss_update ;;
             2) kiss_install ;;
             3) fetch_linux_kernel ;;
-            4) get_hostname ;;
-            5) set_root_password ;;
-            6) add_user ;;
-            7) genfstab ;;
-            8) grub_install ;;
+            4) essential_kernel_config ;;
+            5) get_hostname ;;
+            6) set_root_password ;;
+            7) add_user ;;
+            8) genfstab ;;
+            9) grub_install ;;
             *) dialog --msgbox "Invalid option or cancelled. Please select a valid option." 6 30 ;;
         esac
     done
