@@ -65,10 +65,10 @@ kiss_install() {
 
     # Check if doas is installed before configuring doas.conf
     if command -v doas >/dev/null; then
-        # Configure doas.conf safely
-        grep -q "permit persist :wheel" /etc/doas.conf || echo "permit persist :wheel" >> /etc/doas.conf
-        grep -q "permit nopass root" /etc/doas.conf || echo "permit nopass root" >> /etc/doas.conf
-        grep -q "permit nopass :wheel cmd env" /etc/doas.conf || echo "permit nopass :wheel cmd env" >> /etc/doas.conf
+        # Configure doas.conf
+        echo "permit persist :wheel" >> /etc/doas.conf
+        echo "permit nopass root" >> /etc/doas.conf
+        echo "permit nopass :wheel cmd env" >> /etc/doas.conf
     else
         dialog --msgbox "doas not installed, skipping configuration." 5 50
     fi
