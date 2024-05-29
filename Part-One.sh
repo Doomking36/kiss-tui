@@ -212,7 +212,8 @@ repo_input() {
     # Perform cloning operations
     if ! (clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
         clone_repo https://github.com/kiss-community/community "$DESTINATION/community" &&
-        clone_repo https://github.com/ehawkvu/kiss-xorg "$DESTINATION/xorg"); then
+        clone_repo https://github.com/ehawkvu/kiss-xorg "$DESTINATION/xorg" &&
+        clone repo https://github.com/hovercats/kiss-dumpsterfire "$DESTINATION/fire"); then
         dialog --msgbox "Some repositories failed to clone. Please check the error messages." 6 50
         return
     fi
@@ -305,6 +306,7 @@ export KISS_PATH="$KISS_PATH_DEST/repo/core"
 KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/extra"
 KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/xorg"
 KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/community"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/fire/xorg"
 KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/repo/extra"
 KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/repo/wayland"
 KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/community/community"
