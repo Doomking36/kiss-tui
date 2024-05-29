@@ -69,6 +69,9 @@ kiss_install() {
         echo "permit persist :wheel" >> /etc/doas.conf
         echo "permit nopass root" >> /etc/doas.conf
         echo "permit nopass :wheel cmd env" >> /etc/doas.conf
+        echo "permit nopass :wheel cmd poweroff" >> /etc/doas.conf
+        echo "permit nopass :wheel cmd reboot" >> /etc/doas.conf
+        echo "permit nopass :wheel cmd dhcpcd" >> /etc/doas.conf
     else
         dialog --msgbox "doas not installed, skipping configuration." 5 50
     fi
