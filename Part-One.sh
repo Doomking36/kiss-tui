@@ -213,7 +213,7 @@ repo_input() {
     if ! (clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
         clone_repo https://github.com/kiss-community/community "$DESTINATION/community" &&
         clone_repo https://github.com/ehawkvu/kiss-xorg "$DESTINATION/xorg" &&
-        clone repo https://github.com/hovercats/kiss-dumpsterfire "$DESTINATION/fire"); then
+        clone_repo https://github.com/hovercats/kiss-dumpsterfire "$DESTINATION/fire"); then
         dialog --msgbox "Some repositories failed to clone. Please check the error messages." 6 50
         return
     fi
