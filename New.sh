@@ -277,8 +277,6 @@ create_profile() {
         JOBS=$(nproc)
     fi
 
-    TZ=$(dialog --stdout --title "Time Zone" --inputbox "Enter your timezone (e.g., CDT). Leave empty if you do not wish to set it:" 8 50)
-
     if ! touch "$PROFILE_FILE"; then
         dialog --title "Error" --msgbox "Unable to create profile file. Check permissions." 5 60
         return
