@@ -168,8 +168,9 @@ start_installation() {
     dialog --title "Installation Complete" --msgbox "KISS chroot environment has been successfully installed and set up on /mnt." 6 50
 }
 
-# Global variable for destination directory
+# Global variables for destination directory and environment choice
 DESTINATION=""
+ENVIRONMENT=""
 
 # Function to clone specific repositories with user-specified destination
 repo_input() {
@@ -209,23 +210,28 @@ repo_input() {
         fi
     }
 
-    # Prompt the user to select Wayland or Xorg
-    dialog --menu "Select the environment you want to set up:" 15 50 2 \
+    # Prompt the user to select Wayland, Xorg, or Both
+    dialog --menu "Select the environment you want to set up:" 15 50 3 \
         1 "Wayland" \
-        2 "Xorg" 2>choice.txt
+        2 "Xorg" \
+        3 "Both" 2>choice.txt
 
     choice=$(<choice.txt)
     rm -f choice.txt
 
+    ENVIRONMENT="$choice"
+
     if [ "$choice" == "1" ]; then
         # Perform cloning operations for Wayland
         if ! (clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
-            clone_repo https://github.com/kiss-community/community "$DESTINATION/community"); then
+            clone_repo https://github.com/kiss-community/community "$DESTINATION/community" &&
+            clone_repo https://github.com/wayland-project/wayland "$DESTINATION/wayland" &&
+            clone_repo https://github.com/wayland-project/wayland-protocols "$DESTINATION/wayland-protocols"); then
             dialog --msgbox "Some repositories failed to clone. Please check the error messages." 6 50
             return
         fi
         # Inform the user of successful cloning for Wayland
-        dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community" 10 50
+        dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/wayland\n- $DESTINATION/wayland-protocols" 10 50
     elif [ "$choice" == "2" ]; then
         # Perform cloning operations for Xorg
         if ! (clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
@@ -237,6 +243,19 @@ repo_input() {
         fi
         # Inform the user of successful cloning for Xorg
         dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/xorg\n- $DESTINATION/fire" 10 50
+    elif [ "$choice" == "3" ]; then
+        # Perform cloning operations for Both Wayland and Xorg
+        if ! (clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
+            clone_repo https://github.com/kiss-community/community "$DESTINATION/community" &&
+            clone_repo https://github.com/wayland-project/wayland "$DESTINATION/wayland" &&
+            clone_repo https://github.com/wayland-project/wayland-protocols "$DESTINATION/wayland-protocols" &&
+            clone_repo https://github.com/ehawkvu/kiss-xorg "$DESTINATION/xorg" &&
+            clone_repo https://github.com/hovercats/kiss-dumpsterfire "$DESTINATION/fire"); then
+            dialog --msgbox "Some repositories failed to clone. Please check the error messages." 6 50
+            return
+        fi
+        # Inform the user of successful cloning for Both
+        dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/wayland\n- $DESTINATION/wayland-protocols\n- $DESTINATION/xorg\n- $DESTINATION/fire" 10 50
     else
         dialog --msgbox "Invalid choice. Exiting." 5 40
         exit 1
@@ -318,7 +337,42 @@ create_profile() {
             ;;
     esac
 
-    cat > "$PROFILE_FILE" <<EOF
+    case $ENVIRONMENT in
+        1) # Wayland
+            cat > "$PROFILE_FILE" <<EOF
+# KISS Path Configuration
+export KISS_PATH="$KISS_PATH_DEST/repo/core"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/repo/extra"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/repo/wayland"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/community/community"
+
+# Build Flags
+export CFLAGS="$CFLAGS"
+export CXXFLAGS="$CFLAGS"
+export MAKEFLAGS="-j$JOBS"
+export SAMUFLAGS="-j$JOBS"
+EOF
+        ;;
+        2) # Xorg
+            cat > "$PROFILE_FILE" <<EOF
+# KISS Path Configuration
+export KISS_PATH="$KISS_PATH_DEST/repo/core"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/extra"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/xorg"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/community"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/fire/xorg"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/repo/extra"
+KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/community/community"
+
+# Build Flags
+export CFLAGS="$CFLAGS"
+export CXXFLAGS="$CFLAGS"
+export MAKEFLAGS="-j$JOBS"
+export SAMUFLAGS="-j$JOBS"
+EOF
+        ;;
+        3) # Both
+            cat > "$PROFILE_FILE" <<EOF
 # KISS Path Configuration
 export KISS_PATH="$KISS_PATH_DEST/repo/core"
 KISS_PATH="\$KISS_PATH:$KISS_PATH_DEST/xorg/extra"
@@ -335,6 +389,12 @@ export CXXFLAGS="$CFLAGS"
 export MAKEFLAGS="-j$JOBS"
 export SAMUFLAGS="-j$JOBS"
 EOF
+        ;;
+        *)
+            dialog --title "Error" --msgbox "Invalid environment choice. Exiting." 5 50
+            return
+        ;;
+    esac
 
     if [ ! -z "$TZ" ]; then
         echo "export TZ=$TZ" >> "$PROFILE_FILE"
