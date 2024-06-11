@@ -220,14 +220,12 @@ repo_input() {
     if [ "$choice" == "1" ]; then
         # Perform cloning operations for Wayland
         if ! (clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
-            clone_repo https://github.com/kiss-community/community "$DESTINATION/community" &&
-            clone_repo https://github.com/wayland-project/wayland "$DESTINATION/wayland" &&
-            clone_repo https://github.com/wayland-project/wayland-protocols "$DESTINATION/wayland-protocols"); then
+            clone_repo https://github.com/kiss-community/community "$DESTINATION/community"); then
             dialog --msgbox "Some repositories failed to clone. Please check the error messages." 6 50
             return
         fi
         # Inform the user of successful cloning for Wayland
-        dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/wayland\n- $DESTINATION/wayland-protocols" 10 50
+        dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community" 10 50
     elif [ "$choice" == "2" ]; then
         # Perform cloning operations for Xorg
         if ! (clone_repo https://github.com/kiss-community/repo "$DESTINATION/repo" &&
