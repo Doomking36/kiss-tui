@@ -219,7 +219,7 @@ repo_input() {
     fi
 
     # Inform the user of successful cloning
-    dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/xorg" 10 50
+    dialog --msgbox "Repositories cloned successfully:\n- $DESTINATION/repo\n- $DESTINATION/community\n- $DESTINATION/xorg\n- $DESTINATION/fire" 10 50
 }
 
 
