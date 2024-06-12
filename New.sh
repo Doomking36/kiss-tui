@@ -392,9 +392,6 @@ EOF
         ;;
     esac
 
-    if [ ! -z "$TZ" ]; then
-        echo "export TZ=$TZ" >> "$PROFILE_FILE"
-    fi
 
     dialog --title "Profile Created" --msgbox "Profile created successfully at $PROFILE_FILE" 6 50
 }
