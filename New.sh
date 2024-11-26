@@ -146,7 +146,7 @@ start_installation() {
 
     # Download KISS chroot tarball
     dialog --infobox "Downloading KISS chroot tarball..." 3 40
-    if ! curl --output kiss.xz --fail https://codeberg.org/kiss-community/repo/releases/download/23.04.30/kiss-chroot-23.04.30.tar.xz; then
+    if ! curl --output kiss.xz --fail https://codeberg.org/kiss-community/repo/releases/download/24.06.14/kiss-chroot-24.06.14-2.tar.xz; then
         dialog --title "Error" --msgbox "Failed to download the KISS chroot tarball. Check your internet connection." 6 50
         return
     fi
